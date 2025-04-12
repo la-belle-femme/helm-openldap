@@ -573,12 +573,12 @@ ltb-passwd:
     enabled: true
     annotations: {}
     # See https://kubernetes.io/docs/concepts/services-networking/ingress/#ingressclass-scope
-    # ingressClassName: nginx
+    ingressClassName: nginx
     path: /
     pathType: Prefix
     ## Ingress Host
     hosts:
-    - "ssl-ldap2.example"
+    - ssl-ldap2.local
     ## Ingress cert
     tls: []
     # - secretName: ssl-ldap2.example
@@ -605,13 +605,20 @@ phpldapadmin:
     annotations: {}
     ## See https://kubernetes.io/docs/concepts/services-networking/ingress/#ingressclass-scope
     # ingressClassName: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: "/"
+    ingressClassName: nginx
     path: /
     pathType: Prefix
-    ## Ingress Host
     hosts:
-    - phpldapadmin.example
-    ## Ingress cert
+      - phpldapadmin.local
     tls: []
+    #path: /
+    # pathType: Prefix
+    ## Ingress Host
+    #hosts:
+    #- phpldapadmin.example
+    ## Ingress cert
+    # tls: []
     # - secretName: phpldapadmin.example
     #   hosts:
     #   - phpldapadmin.example
