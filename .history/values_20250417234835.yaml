@@ -192,15 +192,19 @@ initialSchema: "cosine,inetorgperson,nis"
 
 # Custom openldap configuration files used to override default settings
 # DO NOT FORGET to put the Root Organisation object as it won't be created while using customLdifFiles
-customLdifFiles:
-  01-default-group.ldif: |-
+# customLdifFiles:
+#   00-root.ldif: |-
+#     Root creation
+#     dn: dc=example,dc=org
+#     objectClass: dcObject
+#     objectClass: organization
+#     o: Example, Inc
+#   01-default-group.ldif: |-
     dn: cn=myGroup,dc=example,dc=org
-    objectclass: posixGroup
-    objectclass: top
+    cn: myGroup
     gidnumber: 500
     objectclass: posixGroup
     objectclass: top
-
   02-default-user.ldif: |-
     dn: cn=Jean Dupond,dc=example,dc=org
     cn: Jean Dupond
@@ -440,107 +444,47 @@ serviceAccount:
 ## 'initTlsSecret' init container parameters
 ## need a secret with tls.crt, tls.key and ca.crt keys with associated files
 ## based on the *containerSecurityContext parameters
-####
+##
 initTLSSecret:
-  tls_enabled: true
+  tls_enabled: false
+  ##  openssl image
+  ## @param initTlsSecret.image.registry openssl image registry
+  ## @param initTlsSecret.image.repository openssl image name
+  ## @param initTlsSecret.image.tag openssl image tag
+  ##
   image:
     registry: docker.io
     repository: alpine/openssl
     tag: latest
+    ## @param image.pullPolicy openssl image pull policy
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
     pullPolicy: IfNotPresent
-  secret: "openldap-tls" 
+  # The name of a kubernetes.io/tls type secret to use for TLS
+  secret: "" 
+  ## init-tls-secret container's resource requests and limits
+  ## ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  ## @param initTlsSecret.resources.limits The resources limits for the init container
+  ## @param initTlsSecret.resources.requests The requested resources for the init container
+  ##
   resources:
-   requests:
-    cpu: 50m
-    memory: 64Mi
-  limits: 
-    cpu: 100m
-    memory: 128Mi 
-fail2ban:
-  enabled: true
-  image:
-    repository: debian
-    tag: bullseye-slim
-    pullPolicy: IfNotPresent
-  logs:
-    path: /var/log/ldap/slapd.log  # Host path to LDAP logs
-  jail:
-    bantime: 3600
-    findtime: 600
-    maxretry: 5
-  filters:
-    slapd: |
-      [Definition]
-      failregex = .*slapd.*conn=.*op=.*RESULT.*err=49.*
-      ignoreregex =
-  jailConfig: |
-    [DEFAULT]
-    banaction = iptables-multiport
-    destemail = root@localhost
-    findtime = {{ .Values.fail2ban.jail.findtime }}
-    bantime = {{ .Values.fail2ban.jail.bantime }}
-    maxretry = {{ .Values.fail2ban.jail.maxretry }}
-    [slapd]
-    enabled = true
-    filter = slapd
-    logpath = {{ .Values.fail2ban.logs.path }}
-    port = ldap,ldaps
-    command:
-      - dash
-      - -c
-      - |
-        apt-get update && \
-        apt-get install -y fail2ban && \
-        echo '{{ .Values.fail2ban.filters.slapd }}' > /etc/fail2ban/filter.d/slapd.conf && \
-        echo '{{ .Values.fail2ban.jailConfig }}' > /etc/fail2ban/jail.local && \
-        fail2ban-client start && \
-        tail -f /var/log/fail2ban.log
+    ## Example:
+    ## limits:
+    ##   cpu: 500m
+    ##   memory: 1Gi
+    limits: {}
+    requests: {}
 
-        fail2ban:
-          enabled: true
-          image:
-            repository: debian
-            tag: bullseye-slim
-            pullPolicy: IfNotPresent
-          logs:
-            path: /var/log/ldap/slapd.log
-          jail:
-            bantime: 3600
-            findtime: 600
-            maxretry: 5
-          filters:
-            slapd: |
-              [Definition]
-              failregex = .*slapd.*conn=.*op=.*RESULT.*err=49.*
-              ignoreregex =
-          jailConfig: |
-            [DEFAULT]
-            banaction = iptables-multiport
-            destemail = root@localhost
-            findtime = {{ .Values.fail2ban.jail.findtime }}
-            bantime = {{ .Values.fail2ban.jail.bantime }}
-            maxretry = {{ .Values.fail2ban.jail.maxretry }}
-            [slapd]
-            enabled = true
-            filter = slapd
-            logpath = {{ .Values.fail2ban.logs.path }}
-            port = ldap,ldaps
-          command:
-            - dash
-            - -c
-            - |
-              apt-get update && \
-              apt-get install -y fail2ban && \
-              echo '{{ .Values.fail2ban.filters.slapd }}' > /etc/fail2ban/filter.d/slapd.conf && \
-              echo '{{ .Values.fail2ban.jailConfig }}' > /etc/fail2ban/jail.local && \
-              fail2ban-client start && \
-              tail -f /var/log/fail2ban.log
 ## 'volumePermissions' init container parameters
 ## Changes the owner and group of the persistent volume mount point to runAsUser:fsGroup values
 ##   based on the *podSecurityContext/*containerSecurityContext parameters
 ##
 volumePermissions:
-  enabled: true
+  ## @param volumePermissions.enabled Enable init container that changes the owner/group of the PV mount point to `runAsUser:fsGroup`
+  ##
+  enabled: false
   ## Bitnami Shell image
   ## ref: https://hub.docker.com/r/bitnami/bitnami-shell/tags/
   ## @param volumePermissions.image.registry Bitnami Shell image registry
@@ -555,7 +499,8 @@ volumePermissions:
     pullPolicy: IfNotPresent
 
   ## Command to execute during the volumePermission startup
-  command: [ 'sh', '-c', 'chmod -R g+rwX /bitnami' ]
+    command: [ 'sh', '-c', 'chmod -R g+rwX /bitnami' ]
+  ## command: {}
   ## Init container's resource requests and limits
   ## ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
   ## @param volumePermissions.resources.limits The resources limits for the init container

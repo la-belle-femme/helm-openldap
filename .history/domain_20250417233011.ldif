@@ -1,0 +1,5 @@
+cat > domain.ldif <<EOF
+dn: dc=example,dc=org
+objectClass: dcObject
+dc: example
+EOF

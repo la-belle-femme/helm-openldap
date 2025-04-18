@@ -1,0 +1,17 @@
+# Add admin1 to Admins group
+dn: cn=Admins,ou=Groups,dc=example,dc=org
+changetype: modify
+add: member
+member: uid=admin1,ou=People,dc=example,dc=org
+
+# Add devops1 to DevOps group
+dn: cn=DevOps,ou=Groups,dc=example,dc=org
+changetype: modify
+add: member
+member: uid=devops1,ou=People,dc=example,dc=org
+
+# Add engineer1 to Engineers group
+dn: cn=Engineers,ou=Groups,dc=example,dc=org
+changetype: modify
+add: member
+member: uid=engineer1,ou=People,dc=example,dc=org

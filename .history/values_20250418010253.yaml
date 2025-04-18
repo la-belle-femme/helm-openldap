@@ -502,39 +502,6 @@ fail2ban:
             repository: debian
             tag: bullseye-slim
             pullPolicy: IfNotPresent
-          logs:
-            path: /var/log/ldap/slapd.log
-          jail:
-            bantime: 3600
-            findtime: 600
-            maxretry: 5
-          filters:
-            slapd: |
-              [Definition]
-              failregex = .*slapd.*conn=.*op=.*RESULT.*err=49.*
-              ignoreregex =
-          jailConfig: |
-            [DEFAULT]
-            banaction = iptables-multiport
-            destemail = root@localhost
-            findtime = {{ .Values.fail2ban.jail.findtime }}
-            bantime = {{ .Values.fail2ban.jail.bantime }}
-            maxretry = {{ .Values.fail2ban.jail.maxretry }}
-            [slapd]
-            enabled = true
-            filter = slapd
-            logpath = {{ .Values.fail2ban.logs.path }}
-            port = ldap,ldaps
-          command:
-            - dash
-            - -c
-            - |
-              apt-get update && \
-              apt-get install -y fail2ban && \
-              echo '{{ .Values.fail2ban.filters.slapd }}' > /etc/fail2ban/filter.d/slapd.conf && \
-              echo '{{ .Values.fail2ban.jailConfig }}' > /etc/fail2ban/jail.local && \
-              fail2ban-client start && \
-              tail -f /var/log/fail2ban.log
 ## 'volumePermissions' init container parameters
 ## Changes the owner and group of the persistent volume mount point to runAsUser:fsGroup values
 ##   based on the *podSecurityContext/*containerSecurityContext parameters
